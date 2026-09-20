@@ -16,12 +16,13 @@ import {
 
 import { generateInstanceId } from '../components/helpers';
 import { Board, DataTypes, Item, Lane } from '../components/types';
+import { handleRecurringCard } from './recurringCard';
 
 export interface BoardModifiers {
   appendItems: (path: Path, items: Item[]) => void;
   prependItems: (path: Path, items: Item[]) => void;
   insertItems: (path: Path, items: Item[]) => void;
-  replaceItem: (path: Path, items: Item[]) => void;
+  replaceItem: (path: Path, items: Item[], completedItem?: Item) => void;
   splitItem: (path: Path, items: Item[]) => void;
   moveItemToTop: (path: Path) => void;
   moveItemToBottom: (path: Path) => void;
@@ -31,7 +32,7 @@ export interface BoardModifiers {
   archiveLane: (path: Path) => void;
   archiveLaneItems: (path: Path) => void;
   deleteEntity: (path: Path) => void;
-  updateItem: (path: Path, item: Item) => void;
+  updateItem: (path: Path, item: Item, completedItem?: Item) => void;
   archiveItem: (path: Path) => void;
   duplicateEntity: (path: Path) => void;
 }
@@ -67,10 +68,14 @@ export function getBoardModifiers(view: KanbanView, stateManager: StateManager):
       stateManager.setState((boardData) => insertEntity(boardData, path, items));
     },
 
-    replaceItem: (path: Path, items: Item[]) => {
-      stateManager.setState((boardData) =>
-        insertEntity(removeEntity(boardData, path), path, items)
-      );
+    replaceItem: (path: Path, items: Item[], completedItem?: Item) => {
+      stateManager.setState((boardData) => {
+        const newBoard = insertEntity(removeEntity(boardData, path), path, items);
+        if (completedItem) {
+          return handleRecurringCard(newBoard, completedItem, stateManager);
+        }
+        return newBoard;
+      });
     },
 
     splitItem: (path: Path, items: Item[]) => {
@@ -218,15 +223,19 @@ export function getBoardModifiers(view: KanbanView, stateManager: StateManager):
       });
     },
 
-    updateItem: (path: Path, item: Item) => {
+    updateItem: (path: Path, item: Item, completedItem?: Item) => {
       stateManager.setState((boardData) => {
-        return updateParentEntity(boardData, path, {
+        const newBoard = updateParentEntity(boardData, path, {
           children: {
             [path[path.length - 1]]: {
               $set: item,
             },
           },
         });
+        if (completedItem) {
+          return handleRecurringCard(newBoard, completedItem, stateManager);
+        }
+        return newBoard;
       });
     },
 

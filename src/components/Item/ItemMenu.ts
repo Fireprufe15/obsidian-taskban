@@ -4,11 +4,12 @@ import { Dispatch, StateUpdater, useCallback } from 'preact/hooks';
 import { StateManager } from 'src/StateManager';
 import { Path } from 'src/dnd/types';
 import { moveEntity } from 'src/dnd/util/data';
+import { handleRecurringCard } from 'src/helpers/recurringCard';
 import { t } from 'src/lang/helpers';
 
 import { BoardModifiers } from '../../helpers/boardModifiers';
-import { applyTemplate, escapeRegExpStr, generateInstanceId } from '../helpers';
-import { EditState, Item } from '../types';
+import { applyTemplate, escapeRegExpStr, generateInstanceId, maybeCompleteForMove } from '../helpers';
+import { DataTypes, EditState, Item } from '../types';
 import {
   constructDatePicker,
   constructMenuDatePickerOnChange,
@@ -269,15 +270,39 @@ export function useItemMenu({
         const lanes = stateManager.state.children;
         if (lanes.length <= 1) return;
         for (let i = 0, len = lanes.length; i < len; i++) {
-          menu.addItem((item) =>
-            item
+          menu.addItem((menuItem) =>
+            menuItem
               .setIcon('lucide-square-kanban')
               .setChecked(path[0] === i)
               .setTitle(lanes[i].data.title)
               .onClick(() => {
                 if (path[0] === i) return;
                 stateManager.setState((boardData) => {
-                  return moveEntity(boardData, path, [i, 0]);
+                  const targetLane = boardData.children[i];
+                  const isCompleting =
+                    !item.data.checked && !!targetLane?.data?.shouldMarkItemsComplete;
+
+                  const newBoard = moveEntity(boardData, path, [i, 0], (entity) => {
+                    if (entity.type === DataTypes.Item) {
+                      const { next } = maybeCompleteForMove(
+                        stateManager,
+                        boardData,
+                        path,
+                        stateManager,
+                        boardData,
+                        [i, 0],
+                        entity
+                      );
+                      return next;
+                    }
+                    return entity;
+                  });
+
+                  if (isCompleting) {
+                    return handleRecurringCard(newBoard, item, stateManager);
+                  }
+
+                  return newBoard;
                 });
               })
           );

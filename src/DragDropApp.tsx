@@ -19,6 +19,7 @@ import {
   updateEntity,
 } from './dnd/util/data';
 import { getBoardModifiers } from './helpers/boardModifiers';
+import { handleRecurringCard } from './helpers/recurringCard';
 import KanbanPlugin from './main';
 import { frontmatterKey, legacyFrontmatterKey, primaryFrontmatterKey } from './parsers/common';
 import {
@@ -169,16 +170,25 @@ export function DragDropApp({ win, plugin }: { win: Window; plugin: KanbanPlugin
           // Remove sorting in the destination lane
           const destinationParentPath = dropPath.slice(0, -1);
           const destinationParent = getEntityFromPath(board, destinationParentPath);
+          const isCompleting =
+            entity.type === DataTypes.Item &&
+            !(entity as Item).data.checked &&
+            !!destinationParent?.data?.shouldMarkItemsComplete;
 
+          let finalBoard = newBoard;
           if (destinationParent?.data?.sorted !== undefined) {
-            return updateEntity(newBoard, destinationParentPath, {
+            finalBoard = updateEntity(newBoard, destinationParentPath, {
               data: {
                 $unset: ['sorted'],
               },
             });
           }
 
-          return newBoard;
+          if (isCompleting) {
+            return handleRecurringCard(finalBoard, entity as Item, stateManager);
+          }
+
+          return finalBoard;
         });
       }
 
@@ -220,6 +230,12 @@ export function DragDropApp({ win, plugin }: { win: Window; plugin: KanbanPlugin
             toInsert.push(entity);
           }
 
+          const destinationParent = getEntityFromPath(destinationBoard, dropPath.slice(0, -1));
+          const isCompleting =
+            entity.type === DataTypes.Item &&
+            !(entity as Item).data.checked &&
+            !!destinationParent?.data?.shouldMarkItemsComplete;
+
           if (entity.type === DataTypes.Lane) {
             const collapsedState = destinationView.getViewState('list-collapse');
             const val = sourceView.getViewState('list-collapse')[dragPath.last()];
@@ -235,7 +251,11 @@ export function DragDropApp({ win, plugin }: { win: Window; plugin: KanbanPlugin
               data: { settings: { 'list-collapse': { $set: op(collapsedState) } } },
             });
           } else {
-            return insertEntity(destinationBoard, dropPath, toInsert);
+            const insertedBoard = insertEntity(destinationBoard, dropPath, toInsert);
+            if (isCompleting) {
+              return handleRecurringCard(insertedBoard, entity as Item, destinationStateManager);
+            }
+            return insertedBoard;
           }
         });
 

@@ -3,7 +3,8 @@ import { Menu } from 'obsidian';
 import { JSX, memo, useCallback, useContext, useState } from 'preact/compat';
 import isEqual from 'react-fast-compare';
 import { ExplicitPathContext } from 'src/dnd/components/context';
-import { moveEntity } from 'src/dnd/util/data';
+import { getEntityFromPath, moveEntity } from 'src/dnd/util/data';
+import { handleRecurringCard } from 'src/helpers/recurringCard';
 
 import { Icon } from '../Icon/Icon';
 import { DateAndTime, RelativeDate } from '../Item/DateAndTime';
@@ -12,8 +13,8 @@ import { ItemContent, useDatePickers } from '../Item/ItemContent';
 import { useItemMenu } from '../Item/ItemMenu';
 import { MarkdownRenderer } from '../MarkdownRenderer/MarkdownRenderer';
 import { KanbanContext, SearchContext } from '../context';
-import { c, useGetDateColorFn } from '../helpers';
-import { EditState, Item, Lane, isEditing } from '../types';
+import { c, maybeCompleteForMove, useGetDateColorFn } from '../helpers';
+import { DataTypes, EditState, Item, Lane, isEditing } from '../types';
 import { TableItem } from './types';
 
 export const DateCell = memo(function DateCell({
@@ -140,8 +141,39 @@ export const LaneCell = memo(function LaneCell({ lane, path }: { lane: Lane; pat
                 .onClick(() => {
                   if (lane === l) return;
                   stateManager.setState((boardData) => {
+                    const entity = getEntityFromPath(boardData, path);
                     const target = boardData.children[i];
-                    return moveEntity(boardData, path, [i, target.children.length]);
+                    const isCompleting =
+                      entity.type === DataTypes.Item &&
+                      !(entity as Item).data.checked &&
+                      !!target?.data?.shouldMarkItemsComplete;
+
+                    const newBoard = moveEntity(
+                      boardData,
+                      path,
+                      [i, target.children.length],
+                      (entity) => {
+                        if (entity.type === DataTypes.Item) {
+                          const { next } = maybeCompleteForMove(
+                            stateManager,
+                            boardData,
+                            path,
+                            stateManager,
+                            boardData,
+                            [i, target.children.length],
+                            entity
+                          );
+                          return next;
+                        }
+                        return entity;
+                      }
+                    );
+
+                    if (isCompleting) {
+                      return handleRecurringCard(newBoard, entity as Item, stateManager);
+                    }
+
+                    return newBoard;
                   });
                 })
             );

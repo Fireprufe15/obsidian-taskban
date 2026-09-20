@@ -30,6 +30,7 @@ export const ItemCheckbox = memo(function ItemCheckbox({
   const [isHoveringCheckbox, setIsHoveringCheckbox] = useState(false);
 
   const onCheckboxChange = useCallback(() => {
+    const isBecomingFinished = !item.data.checked;
     const updates = toggleTask(item, stateManager.file);
     if (updates) {
       const [itemStrings, checkChars, thisIndex] = updates;
@@ -39,7 +40,7 @@ export const ItemCheckbox = memo(function ItemCheckbox({
         return next;
       });
 
-      boardModifiers.replaceItem(path, replacements);
+      boardModifiers.replaceItem(path, replacements, isBecomingFinished ? item : undefined);
     } else {
       boardModifiers.updateItem(
         path,
@@ -52,7 +53,8 @@ export const ItemCheckbox = memo(function ItemCheckbox({
             },
             $toggle: ['checked'],
           },
-        })
+        }),
+        isBecomingFinished ? item : undefined
       );
     }
   }, [item, stateManager, boardModifiers, ...path]);
