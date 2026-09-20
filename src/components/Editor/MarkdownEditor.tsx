@@ -110,6 +110,16 @@ export function MarkdownEditor({
   const { view, stateManager } = useContext(KanbanContext);
   const elRef = useRef<HTMLDivElement>();
   const internalRef = useRef<EditorView>();
+  const onEnterRef = useRef(onEnter);
+  onEnterRef.current = onEnter;
+  const onEscapeRef = useRef(onEscape);
+  onEscapeRef.current = onEscape;
+  const onChangeRef = useRef(onChange);
+  onChangeRef.current = onChange;
+  const onPasteRef = useRef(onPaste);
+  onPasteRef.current = onPaste;
+  const onSubmitRef = useRef(onSubmit);
+  onSubmitRef.current = onSubmit;
 
   useEffect(() => {
     class Editor extends view.plugin.MarkdownEditor {
@@ -129,7 +139,7 @@ export function MarkdownEditor({
       updateBottomPadding() {}
       onUpdate(update: ViewUpdate, changed: boolean) {
         super.onUpdate(update, changed);
-        onChange && onChange(update);
+        onChangeRef.current && onChangeRef.current(update);
       }
       buildLocalExtensions(): Extension[] {
         const extensions = super.buildLocalExtensions();
@@ -169,14 +179,14 @@ export function MarkdownEditor({
           extensions.push(
             Prec.high(
               EditorView.domEventHandlers({
-                paste: onPaste,
+                paste: (e, cm) => onPasteRef.current && onPasteRef.current(e, cm),
               })
             )
           );
         }
 
         const makeEnterHandler = (mod: boolean, shift: boolean) => (cm: EditorView) => {
-          const didRun = onEnter(cm, mod, shift);
+          const didRun = onEnterRef.current(cm, mod, shift);
           if (didRun) return true;
           if (this.app.vault.getConfig('smartIndentList')) {
             this.editor.newlineAndIndentContinueMarkdownList();
@@ -204,7 +214,7 @@ export function MarkdownEditor({
               {
                 key: 'Escape',
                 run: (cm) => {
-                  onEscape(cm);
+                  onEscapeRef.current(cm);
                   return false;
                 },
                 preventDefault: true,
@@ -274,7 +284,7 @@ export function MarkdownEditor({
       <div className={classcat(cls)} ref={elRef}></div>
       {Platform.isMobile && (
         <button
-          onClick={() => onSubmit(internalRef.current)}
+          onClick={() => onSubmitRef.current(internalRef.current)}
           className={classcat([c('item-submit-button'), 'mod-cta'])}
         >
           {t('Submit')}

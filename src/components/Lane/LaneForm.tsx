@@ -16,6 +16,9 @@ interface LaneFormProps {
 
 export function LaneForm({ onNewLane, closeLaneForm }: LaneFormProps) {
   const [shouldMarkAsComplete, setShouldMarkAsComplete] = useState(false);
+  const shouldMarkAsCompleteRef = useRef(shouldMarkAsComplete);
+  shouldMarkAsCompleteRef.current = shouldMarkAsComplete;
+
   const editorRef = useRef<EditorView>();
   const inputRef = useRef<HTMLTextAreaElement>();
   const clickOutsideRef = useOnclickOutside(() => closeLaneForm(), {
@@ -36,7 +39,7 @@ export function LaneForm({ onNewLane, closeLaneForm }: LaneFormProps) {
         children: [],
         data: {
           ...parseLaneTitle(title),
-          shouldMarkItemsComplete: shouldMarkAsComplete,
+          shouldMarkItemsComplete: shouldMarkAsCompleteRef.current,
         },
       });
 
@@ -51,7 +54,7 @@ export function LaneForm({ onNewLane, closeLaneForm }: LaneFormProps) {
       setShouldMarkAsComplete(false);
       onNewLane();
     },
-    [onNewLane, setShouldMarkAsComplete, boardModifiers]
+    [onNewLane, boardModifiers]
   );
 
   const editState = useMemo(() => ({ x: 0, y: 0 }), []);
@@ -62,7 +65,7 @@ export function LaneForm({ onNewLane, closeLaneForm }: LaneFormProps) {
         return true;
       }
     },
-    [createLane]
+    [createLane, stateManager]
   );
   const onSubmit = useCallback(
     (cm: EditorView) => createLane(cm, cm.state.doc.toString()),
