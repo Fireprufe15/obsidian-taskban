@@ -13,6 +13,7 @@
 
 .kanban-plugin {
   --lane-width: 272px;
+  --card-radius: var(--taskban-card-radius, var(--kanban-card-radius, var(--radius-s, 4px)));
 }
 
 .kanban-plugin {
@@ -618,7 +619,7 @@ button.kanban-plugin__lane-settings-button + button.kanban-plugin__lane-settings
     padding-inline: 8px;
     border: 1px solid var(--background-modifier-border);
     background-color: var(--background-primary);
-    border-radius: var(--input-radius);
+    border-radius: var(--card-radius);
     min-height: var(--input-height);
   }
 }
@@ -691,7 +692,7 @@ button.kanban-plugin__new-item-button {
 .kanban-plugin__item {
   font-size: 0.875rem;
   border: 1px solid var(--background-modifier-border);
-  border-radius: var(--input-radius);
+  border-radius: var(--card-radius);
   overflow: hidden;
   transition: 300ms opacity cubic-bezier(0.25, 1, 0.5, 1);
 
