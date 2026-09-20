@@ -7,7 +7,13 @@ import { KanbanSettings, SettingRetrievers } from './Settings';
 import { getDefaultDateFormat, getDefaultTimeFormat } from './components/helpers';
 import { Board, BoardTemplate, Item } from './components/types';
 import { ListFormat } from './parsers/List';
-import { BaseFormat, frontmatterKey, shouldRefreshBoard } from './parsers/common';
+import {
+  BaseFormat,
+  frontmatterKey,
+  legacyFrontmatterKey,
+  primaryFrontmatterKey,
+  shouldRefreshBoard,
+} from './parsers/common';
 import { getTaskStatusDone } from './parsers/helpers/inlineMetadata';
 import { defaultDateTrigger, defaultMetadataPosition, defaultTimeTrigger } from './settingHelpers';
 
@@ -230,8 +236,14 @@ export class StateManager {
     const archiveDateFormat =
       this.getSettingRaw('archive-date-format', suppliedSettings) || `${dateFormat} ${timeFormat}`;
 
+    const boardFormat =
+      this.getSettingRaw(primaryFrontmatterKey, suppliedSettings) ||
+      this.getSettingRaw(legacyFrontmatterKey, suppliedSettings) ||
+      'board';
+
     this.compiledSettings = {
-      [frontmatterKey]: this.getSettingRaw(frontmatterKey, suppliedSettings) || 'board',
+      [primaryFrontmatterKey]: boardFormat,
+      [legacyFrontmatterKey]: boardFormat,
       'date-format': dateFormat,
       'date-display-format': dateDisplayFormat,
       'date-time-display-format': dateDisplayFormat + ' ' + timeFormat,
@@ -310,7 +322,10 @@ export class StateManager {
       children: [],
       data: {
         archive: [],
-        settings: { [frontmatterKey]: 'board' },
+        settings: {
+          [primaryFrontmatterKey]: 'board',
+          [legacyFrontmatterKey]: 'board',
+        },
         frontmatter: {},
         isSearching: false,
         errors: [],

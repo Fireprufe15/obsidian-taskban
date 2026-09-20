@@ -12,7 +12,7 @@ import {
 import { Droppable, useNestedEntityPath } from 'src/dnd/components/Droppable';
 import { DndManagerContext } from 'src/dnd/components/context';
 import { useDragHandle } from 'src/dnd/managers/DragManager';
-import { frontmatterKey } from 'src/parsers/common';
+import { frontmatterKey, legacyFrontmatterKey } from 'src/parsers/common';
 
 import { KanbanContext, SearchContext } from '../context';
 import { c } from '../helpers';
@@ -190,7 +190,7 @@ interface ItemsProps {
 export const Items = memo(function Items({ isStatic, items, shouldMarkItemsComplete }: ItemsProps) {
   const search = useContext(SearchContext);
   const { view } = useContext(KanbanContext);
-  const boardView = view.useViewState(frontmatterKey);
+  const boardView = view.useViewState(frontmatterKey) || view.useViewState(legacyFrontmatterKey) || 'board';
 
   return (
     <>

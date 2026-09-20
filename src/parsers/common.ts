@@ -6,7 +6,10 @@ import { Board, FileMetadata, Item } from 'src/components/types';
 import { defaultSort } from 'src/helpers/util';
 import { t } from 'src/lang/helpers';
 
-export const frontmatterKey = 'kanban-plugin';
+export const primaryFrontmatterKey = 'taskban-plugin';
+export const legacyFrontmatterKey = 'kanban-plugin';
+export const frontmatterKey = primaryFrontmatterKey;
+export const frontmatterKeys = [primaryFrontmatterKey, legacyFrontmatterKey] as const;
 
 export enum ParserFormats {
   List,
@@ -22,9 +25,15 @@ export interface BaseFormat {
 
 export const completeString = `**${t('Complete')}**`;
 export const archiveString = '***';
-export const basicFrontmatter = ['---', '', `${frontmatterKey}: board`, '', '---', '', ''].join(
-  '\n'
-);
+export const basicFrontmatter = [
+  '---',
+  '',
+  `${primaryFrontmatterKey}: board`,
+  '',
+  '---',
+  '',
+  '',
+].join('\n');
 
 export function settingsToCodeblock(board: Board): string {
   return [

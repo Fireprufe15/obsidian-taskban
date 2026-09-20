@@ -12,7 +12,7 @@ import { ScrollContainer } from 'src/dnd/components/ScrollContainer';
 import { SortPlaceholder } from 'src/dnd/components/SortPlaceholder';
 import { Sortable, StaticSortable } from 'src/dnd/components/Sortable';
 import { useDragHandle } from 'src/dnd/managers/DragManager';
-import { frontmatterKey } from 'src/parsers/common';
+import { frontmatterKey, legacyFrontmatterKey } from 'src/parsers/common';
 import { getTaskStatusDone } from 'src/parsers/helpers/inlineMetadata';
 
 import { Items } from '../Item/Item';
@@ -45,7 +45,7 @@ function DraggableLaneRaw({
   const { stateManager, boardModifiers, view } = useContext(KanbanContext);
   const search = useContext(SearchContext);
 
-  const boardView = view.useViewState(frontmatterKey);
+  const boardView = view.useViewState(frontmatterKey) || view.useViewState(legacyFrontmatterKey) || 'board';
   const path = useNestedEntityPath(laneIndex);
   const laneWidth = stateManager.useSetting('lane-width');
   const fullWidth = boardView === 'list' && stateManager.useSetting('full-list-lane-width');
@@ -226,7 +226,10 @@ export interface LanesProps {
 function LanesRaw({ lanes, collapseDir }: LanesProps) {
   const search = useContext(SearchContext);
   const { view } = useContext(KanbanContext);
-  const boardView = view.useViewState(frontmatterKey) || 'board';
+  const boardView =
+    view.useViewState(frontmatterKey) ||
+    view.useViewState(legacyFrontmatterKey) ||
+    'board';
   const collapseState = view.useViewState('list-collapse') || [];
 
   return (

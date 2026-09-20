@@ -1,7 +1,7 @@
 import { App, TFile } from 'obsidian';
 import { getDailyNoteSettings, getDateFromFile } from 'obsidian-daily-notes-interface';
 
-import { frontmatterKey } from './parsers/common';
+import { frontmatterKey, frontmatterKeys } from './parsers/common';
 
 export function gotoNextDailyNote(app: App, file: TFile) {
   const date = getDateFromFile(file as any, 'day');
@@ -49,17 +49,13 @@ export function hasFrontmatterKeyRaw(data: string) {
     return false;
   }
 
-  if (!match[1].contains(frontmatterKey)) {
-    return false;
-  }
-
-  return true;
+  return frontmatterKeys.some((k) => match[1].includes(k));
 }
 
 export function hasFrontmatterKey(file: TFile) {
   if (!file) return false;
   const cache = app.metadataCache.getFileCache(file);
-  return !!cache?.frontmatter?.[frontmatterKey];
+  return !!(cache?.frontmatter && frontmatterKeys.some((k) => !!cache.frontmatter[k]));
 }
 
 export function laneTitleWithMaxItems(title: string, maxItems?: number) {

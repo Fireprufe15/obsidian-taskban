@@ -20,7 +20,7 @@ import {
 } from './dnd/util/data';
 import { getBoardModifiers } from './helpers/boardModifiers';
 import KanbanPlugin from './main';
-import { frontmatterKey } from './parsers/common';
+import { frontmatterKey, legacyFrontmatterKey, primaryFrontmatterKey } from './parsers/common';
 import {
   getTaskStatusDone,
   getTaskStatusPreDone,
@@ -291,8 +291,10 @@ export function DragDropApp({ win, plugin }: { win: Window; plugin: KanbanPlugin
 
             if (data?.type === DataTypes.Lane) {
               const boardView =
-                context?.view.viewSettings[frontmatterKey] ||
-                context?.stateManager.getSetting(frontmatterKey);
+                context?.view.viewSettings[primaryFrontmatterKey] ||
+                context?.view.viewSettings[legacyFrontmatterKey] ||
+                context?.stateManager.getSetting(primaryFrontmatterKey) ||
+                context?.stateManager.getSetting(legacyFrontmatterKey);
               const collapseState =
                 context?.view.viewSettings['list-collapse'] ||
                 context?.stateManager.getSetting('list-collapse');

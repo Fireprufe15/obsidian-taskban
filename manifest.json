@@ -1,11 +1,11 @@
 {
-	"id": "obsidian-kanban",
-	"name": "Kanban",
+	"id": "obsidian-taskban",
+	"name": "Taskban",
 	"version": "2.0.51",
 	"minAppVersion": "1.0.0",
-	"description": "Create markdown-backed Kanban boards in Obsidian.",
-	"author": "mgmeyers",
-	"authorUrl": "https://github.com/mgmeyers/obsidian-kanban",
+	"description": "Create markdown-backed Kanban boards in Obsidian (Taskban fork).",
+	"author": "mgmeyers, Fireprufe15",
+	"authorUrl": "https://github.com/Fireprufe15/obsidian-taskban",
 	"helpUrl": "https://publish.obsidian.md/kanban/Obsidian+Kanban+Plugin",
 	"isDesktopOnly": false
 }

@@ -23,7 +23,12 @@ import { bindMarkdownEvents } from './helpers/renderMarkdown';
 import { PromiseQueue } from './helpers/util';
 import { t } from './lang/helpers';
 import KanbanPlugin from './main';
-import { frontmatterKey } from './parsers/common';
+import {
+  frontmatterKey,
+  frontmatterKeys,
+  legacyFrontmatterKey,
+  primaryFrontmatterKey,
+} from './parsers/common';
 
 export const kanbanViewType = 'kanban';
 export const kanbanIcon = 'lucide-trello';
@@ -116,9 +121,19 @@ export class KanbanView extends TextFileView implements HoverParent {
   }
 
   setView(view: KanbanFormat) {
-    this.setViewState(frontmatterKey, view);
+    this.setViewState(primaryFrontmatterKey, view);
+    this.setViewState(legacyFrontmatterKey, view);
     this.app.fileManager.processFrontMatter(this.file, (frontmatter) => {
-      frontmatter[frontmatterKey] = view;
+      let updated = false;
+      for (const k of frontmatterKeys) {
+        if (frontmatter[k] !== undefined) {
+          frontmatter[k] = view;
+          updated = true;
+        }
+      }
+      if (!updated) {
+        frontmatter[primaryFrontmatterKey] = view;
+      }
     });
   }
 
@@ -268,7 +283,12 @@ export class KanbanView extends TextFileView implements HoverParent {
   }
 
   populateViewState(settings: KanbanSettings) {
-    this.viewSettings['kanban-plugin'] ??= settings['kanban-plugin'] || 'board';
+    const viewFormat =
+      settings[primaryFrontmatterKey] ||
+      settings[legacyFrontmatterKey] ||
+      'board';
+    this.viewSettings[primaryFrontmatterKey] ??= viewFormat;
+    this.viewSettings[legacyFrontmatterKey] ??= viewFormat;
     this.viewSettings['list-collapse'] ??= settings['list-collapse'] || [];
   }
 
@@ -387,7 +407,11 @@ export class KanbanView extends TextFileView implements HoverParent {
         'lucide-view',
         t('Board view'),
         (evt) => {
-          const view = this.viewSettings[frontmatterKey] || stateManager.getSetting(frontmatterKey);
+          const view =
+            this.viewSettings[primaryFrontmatterKey] ||
+            this.viewSettings[legacyFrontmatterKey] ||
+            stateManager.getSetting(primaryFrontmatterKey) ||
+            stateManager.getSetting(legacyFrontmatterKey);
           new Menu()
             .addItem((item) =>
               item

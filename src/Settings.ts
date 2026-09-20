@@ -32,7 +32,7 @@ import {
 import { getParentWindow } from './dnd/util/getWindow';
 import { t } from './lang/helpers';
 import KanbanPlugin from './main';
-import { frontmatterKey } from './parsers/common';
+import { frontmatterKey, legacyFrontmatterKey, primaryFrontmatterKey } from './parsers/common';
 import {
   createSearchSelect,
   defaultDateTrigger,
@@ -50,7 +50,8 @@ const numberRegEx = /^\d+(?:\.\d+)?$/;
 export type KanbanFormat = 'basic' | 'board' | 'table' | 'list';
 
 export interface KanbanSettings {
-  [frontmatterKey]?: KanbanFormat;
+  [primaryFrontmatterKey]?: KanbanFormat;
+  [legacyFrontmatterKey]?: KanbanFormat;
   'append-archive-date'?: boolean;
   'archive-date-format'?: string;
   'archive-date-separator'?: string;
@@ -93,12 +94,14 @@ export interface KanbanSettings {
 }
 
 export interface KanbanViewSettings {
-  [frontmatterKey]?: KanbanFormat;
+  [primaryFrontmatterKey]?: KanbanFormat;
+  [legacyFrontmatterKey]?: KanbanFormat;
   'list-collapse'?: boolean[];
 }
 
 export const settingKeyLookup: Set<keyof KanbanSettings> = new Set([
-  frontmatterKey,
+  primaryFrontmatterKey,
+  legacyFrontmatterKey,
   'append-archive-date',
   'archive-date-format',
   'archive-date-separator',

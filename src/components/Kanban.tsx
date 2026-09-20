@@ -13,7 +13,7 @@ import { t } from 'src/lang/helpers';
 
 import { DndScope } from '../dnd/components/Scope';
 import { getBoardModifiers } from '../helpers/boardModifiers';
-import { frontmatterKey } from '../parsers/common';
+import { frontmatterKey, legacyFrontmatterKey } from '../parsers/common';
 import { Icon } from './Icon/Icon';
 import { Lanes } from './Lane/Lane';
 import { LaneForm } from './Lane/LaneForm';
@@ -64,7 +64,7 @@ export const Kanban = ({ view, stateManager }: KanbanProps) => {
   const maxArchiveLength = stateManager.useSetting('max-archive-size');
   const dateColors = stateManager.useSetting('date-colors');
   const tagColors = stateManager.useSetting('tag-colors');
-  const boardView = view.useViewState(frontmatterKey);
+  const boardView = view.useViewState(frontmatterKey) || view.useViewState(legacyFrontmatterKey) || 'board';
 
   const closeLaneForm = useCallback(() => {
     if (boardData?.children.length > 0) {
@@ -218,6 +218,7 @@ export const Kanban = ({ view, stateManager }: KanbanProps) => {
             ref={rootRef}
             className={classcat([
               baseClassName,
+              'taskban-plugin',
               {
                 'something-is-dragging': isAnythingDragging,
               },

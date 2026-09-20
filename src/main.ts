@@ -19,7 +19,13 @@ import { DateSuggest, TimeSuggest } from './components/Editor/suggest';
 import { getParentWindow } from './dnd/util/getWindow';
 import { hasFrontmatterKey } from './helpers';
 import { t } from './lang/helpers';
-import { basicFrontmatter, frontmatterKey } from './parsers/common';
+import {
+  basicFrontmatter,
+  frontmatterKey,
+  frontmatterKeys,
+  legacyFrontmatterKey,
+  primaryFrontmatterKey,
+} from './parsers/common';
 
 interface WindowRegistry {
   viewMap: Map<string, KanbanView>;
@@ -90,7 +96,8 @@ export default class KanbanPlugin extends Plugin {
     this.windowRegistry.clear();
     this.kanbanFileModes = {};
 
-    (this.app.workspace as any).unregisterHoverLinkSource(frontmatterKey);
+    (this.app.workspace as any).unregisterHoverLinkSource(primaryFrontmatterKey);
+    (this.app.workspace as any).unregisterHoverLinkSource(legacyFrontmatterKey);
   }
 
   MarkdownEditor: any;
@@ -449,7 +456,10 @@ export default class KanbanPlugin extends Plugin {
             const stateManager = this.stateManagers.get(file);
             const kanbanView = leaf.view as KanbanView;
             const boardView =
-              kanbanView.viewSettings[frontmatterKey] || stateManager.getSetting(frontmatterKey);
+              kanbanView.viewSettings[primaryFrontmatterKey] ||
+              kanbanView.viewSettings[legacyFrontmatterKey] ||
+              stateManager.getSetting(primaryFrontmatterKey) ||
+              stateManager.getSetting(legacyFrontmatterKey);
 
             menu
               .addItem((item) => {
@@ -566,7 +576,12 @@ export default class KanbanPlugin extends Plugin {
       })
     );
 
-    (app.workspace as any).registerHoverLinkSource(frontmatterKey, {
+    (app.workspace as any).registerHoverLinkSource(primaryFrontmatterKey, {
+      display: 'Taskban',
+      defaultMod: true,
+    });
+
+    (app.workspace as any).registerHoverLinkSource(legacyFrontmatterKey, {
       display: 'Kanban',
       defaultMod: true,
     });
@@ -601,7 +616,9 @@ export default class KanbanPlugin extends Plugin {
         if (!activeFile) return false;
 
         const fileCache = app.metadataCache.getFileCache(activeFile);
-        const fileIsKanban = !!fileCache?.frontmatter && !!fileCache.frontmatter[frontmatterKey];
+        const fileIsKanban =
+          !!fileCache?.frontmatter &&
+          frontmatterKeys.some((k) => !!fileCache.frontmatter[k]);
 
         if (checking) {
           return fileIsKanban;
@@ -791,7 +808,11 @@ export default class KanbanPlugin extends Plugin {
               // Then check for the kanban frontMatterKey
               const cache = self.app.metadataCache.getCache(state.state.file);
 
-              if (cache?.frontmatter && cache.frontmatter[frontmatterKey]) {
+              const hasKey =
+                cache?.frontmatter &&
+                frontmatterKeys.some((k) => !!cache.frontmatter[k]);
+
+              if (hasKey) {
                 // If we have it, force the view type to kanban
                 const newState = {
                   ...state,
